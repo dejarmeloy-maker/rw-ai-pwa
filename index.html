@@ -3,42 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RW AI Mobile ML</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
+<title>RW Probability App</title>
+
 <style>
-body{margin:0;font-family:sans-serif;background:#000;color:#fff;text-align:center}
-h1{padding:10px}
-button{font-size:28px;padding:20px;border-radius:16px;border:none;margin:8px;width:45%}
-#R{background:#0a0;color:#fff}
-#W{background:#a00;color:#fff}
-#analyze{width:90%;background:#333;color:#fff}
-#undo,#reset{width:44%;background:#555}
-textarea{width:90%;height:80px;font-size:22px;border-radius:12px;padding:10px}
-#result{font-size:22px;margin-top:10px}
+  body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  .buttons button {
+    font-size: 22px;
+    padding: 15px 25px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .r { background: red; color: white; }
+  .w { background: white; color: black; }
+
+  .control {
+    background: #444;
+    color: white;
+  }
+
+  #sequence {
+    margin-top: 20px;
+    font-size: 18px;
+    word-wrap: break-word;
+  }
+
+  #result {
+    margin-top: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 15px;
+    border-radius: 10px;
+    background: #222;
+  }
 </style>
 </head>
+
 <body>
 
-<h1>RW AI Mobile ML</h1>
+<h1>RW Probability Analyzer</h1>
 
-<button id="R">R</button>
-<button id="W">W</button>
+<div class="buttons">
+  <button class="r" onclick="add('R')">R</button>
+  <button class="w" onclick="add('W')">W</button>
+</div>
 
-<br>
-<textarea id="input"></textarea><br>
+<div class="buttons">
+  <button class="control" onclick="undo()">Undo</button>
+  <button class="control" onclick="clearAll()">Clear</button>
+</div>
 
-<button id="analyze">ANALYZE</button><br>
-<button id="undo">UNDO</button>
-<button id="reset">RESET</button>
+<div id="sequence"></div>
+<div id="result">Add data to analyze</div>
 
-<div id="result"></div>
-
-<script src="app.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
+  let seq = JSON.parse(localStorage.getItem("seq")) || [];
+
+  function save() {
+    localStorage.setItem("seq", JSON.stringify(seq));
+  }
+
+  function add(val) {
+    seq.push(val);
+    save();
+    render();
+  }
+
+  function undo() {
+    seq.pop();
+    save();
+    render();
+  }
+
+  function clearAll() {
+    seq = [];
+    save();
+    render();
+  }
+
+  function analyze() {
+    if (seq.length < 2) return "Not enough data";
+
+    let last = seq[seq.length - 1];
+    let count = { R: 0, W: 0 };
+
+    for (let i = 0; i < seq.length - 1; i++) {
+      if (seq[i] === last) {
+        count[seq[i + 1]]++;
+      }
+    }
+
+    if (count.R === count.W) return "No clear bias";
+
+    return count.R > count.W
+      ? "Suggested: R 🔴"
+      : "Suggested: W ⚪";
+  }
+
+  function render() {
+    document.getElementById("sequence").innerText =
+      "Sequence: " + seq.join(" ");
+
+    document.getElementById("result").innerText = analyze();
+  }
+
+  render();
 </script>
+
 </body>
 </html>
